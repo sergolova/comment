@@ -1,0 +1,8 @@
+{
+ "auth": {
+ "key": "specialsecretapikey"
+ },
+ "action": "GETBALANCEEXT",
+ "data": {
+ }
+} 

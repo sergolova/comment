@@ -1,0 +1,12 @@
+{
+ "auth": {
+ "key": "specialsecretapikey"
+ },
+ "action": "GETPRICELIST",
+ "data": {
+ "channels": [
+ "sms", "viber"
+ ],
+ "mcc": "255"
+ }
+} 

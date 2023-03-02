@@ -1,0 +1,9 @@
+{
+ "auth": {
+ "key": "specialsecretapikey"
+ },
+ "action": "GETMESSAGESTATUS",
+ "data": {
+ "messageID": "FAPI00040A3AFA000002"
+ }
+} 

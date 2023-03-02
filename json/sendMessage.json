@@ -1,0 +1,29 @@
+{
+ "auth": {
+ "key": "specialsecretapikey"
+ },
+ "action": "SENDMESSAGE",
+ "data": {
+ "recipient": "380971234567",
+ "channels": [
+ "viber",
+ "sms"
+ ],
+ "viber": {
+ "source": "MyViberSource",
+ "ttl": 5,
+ "text": "Viber text",
+ "button": {
+ "caption": "Button Caption",
+ "url": "https://example.org"
+ },
+ "image": "https://example.org/image.png"
+ },
+ "sms": {
+ "source": "MySMSSource",
+ "ttl": 5,
+ "text": "SMS text",
+ "flash": 0
+ }
+ }
+} 
