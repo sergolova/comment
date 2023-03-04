@@ -176,6 +176,7 @@ form span {
 #sms-send {
 	margin-top: 10px;
 	margin-left: 0;
+	cursor: pointer;
 }
 
 .time {

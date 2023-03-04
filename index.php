@@ -21,6 +21,7 @@ $operResult = '';
 $msgResult = '';
 $msgID = '';
 $textAreaValue = '';
+$nameInputValue = '';
 
 if ( $_SERVER['REQUEST_METHOD'] == 'POST' && $_POST['token'] != $_SESSION['lastToken'] ) {
   $_SESSION['lastToken'] = $_POST['token'];
@@ -46,14 +47,16 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' && $_POST['token'] != $_SESSION['lastT
     $operResult = resCommentExists;
   } // Get settings code detected - show json in textArea
 	elseif ( $name == GET_SETTINGS && $comment == GET_SETTINGS ) {
+		$nameInputValue = SET_SETTINGS;
     $textAreaValue = json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     $operResult = resGetSettings;
   } // Set settings code detected - validate json and write to file
 	elseif ( $name == SET_SETTINGS ) {
     $jdata = json_decode($comment, true);
     if ( $jdata !== null && json_last_error() === JSON_ERROR_NONE &&
-        count($jdata) === count($settings) ) {
-      file_put_contents(FILE_SETTINGS, $comment);
+        count($jdata) === count($settings) ) {   // simple check
+      file_put_contents(FILE_SETTINGS, $comment); // save new settings to file
+      $settings = getJsonData(FILE_SETTINGS,[]); // load settings
       $operResult = resSetSettings;
     } else {
       $operResult = resSetSettingsFail;
@@ -118,7 +121,7 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' && $_POST['token'] != $_SESSION['lastT
 		<input type="hidden" name="token" value="<?= (rand(100000, 999999)) ?>"/>
 		<input maxlength="<?= USER_NAME_MAX ?>"
 		       placeholder="Your name, <?= USER_NAME_MAX ?> characters max"
-		       name="u_name">
+		       name="u_name" value="<?=$nameInputValue?>">
 		<textarea maxlength="<?= CONTENT_MAX ?>"
 		          placeholder="Please type here, <?= CONTENT_MAX ?> characters max"
 		          name="u_content"><?=$textAreaValue?></textarea>
