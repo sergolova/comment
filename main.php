@@ -1,15 +1,26 @@
 <?php
 
-session_start();
-
 // JSON file names
 const JSON_FOLDER = 'json/';
 const FILE_BASE = JSON_FOLDER.'base.json';
+const FILE_SETTINGS = JSON_FOLDER.'settings.json';
 const FILE_BALLANCE = JSON_FOLDER.'getBallance.json';
 const FILE_GET_MESSAGE_STATUS = JSON_FOLDER.'getMessageStatus.json';
 const FILE_PRICE_LIST = JSON_FOLDER.'getPriceList.json';
 const FILE_SEND_MESSAGE = JSON_FOLDER.'sendMessage.json';
 const FILE_EMULATE_ANSWER = JSON_FOLDER.'answer.json';
+
+// json settings fields names
+const SET_AUTHOR_PHONE = "author_phone";
+const	SET_SMS_SOURCE = "sms_source";
+const	SET_VIBER_SOURCE = "viber_source";
+const	SET_API_KEY = "api_key";
+const	SET_API_URL = "api_url";
+const	SET_EMULATE_MODE = "emulate_mode";
+const	SET_SMS_TTL = "sms_ttl";    // sms life time, min. (1..1440)
+const	SET_VIBER_TTL = "viber_ttl";  // viber life time, min. (1..1440)
+const	SET_DISABLE_SMS = "disable_sms";
+const	SET_SMS_PER_DAY = "sms_per_day";
 
 // json base fields names
 const ID_DATA = 'data';
@@ -19,30 +30,24 @@ const ID_TIME = 'time';
 const ID_SMS = 'sms';
 const EMPTY_DATA = [ID_DATA => []];
 
-const USER_NAME_MAX = 32;
-const CONTENT_MAX = 2048;
-const CLEAR_FILE = 'clear';
-const SMS_SEND_VALUE = 'send';
-const SMS_PER_DAY = 3;
+// special admin codes for manage Base and Settings
+const CLEAR_BASE = 'clear';
+const DEL_LAST = 'del';
+const GET_SETTINGS = 'get';
+const SET_SETTINGS = 'setsettings';
 
-const API_KEY = '8DhdEdk8nEK7U6wWJrHlpOMKVfT1y9ds';
-const API_URL = 'https://sms-fly.ua/api/v2/api.php';
-const SMS_TTL = 5;    // sms life time, min. (1..1440)
-const VIBER_TTL = 5;  // viber message life time, min. (1..1440)
-const VIBER_IMAGE_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Smiley.svg/330px-Smiley.svg.png";
-const DEF_SMS_SOURCE = 'InfoCentr';
-const DEF_VIBER_SOURCE = 'Promo';
+// api json fields names
 const json_key = 'key';
 const json_auth = 'auth';
+const json_data = 'data';
+const json_messageID = 'messageID';
 const json_recipient = 'recipient';
 const json_channels = 'channels';
-const json_data = 'data';
 const json_source = 'source';
 const json_ttl = 'ttl';
 const json_text = 'text';
 const json_image = 'image';
 const json_status = 'status';
-const json_accepted = 'ACCEPTD';
 const json_cost = 'cost';
 const json_PriceList = 'pricelist';
 const json_Ukraine = '255';
@@ -51,11 +56,14 @@ const json_viber = 'viber';
 const json_balance = 'balance';
 const json_success = 'success';
 const answer_success = '1';
-const answer_fail = '0';
-const SMS_NUMBER = '380977216281';
-//const SMS_NUMBER = '380976469523';
+
 const SMS_MAX_LENGTH_KYR = 70;
 const SMS_MAX_LENGTH_LAT = 160;
+const USER_NAME_MAX = 32;
+const CONTENT_MAX = 2048;
+
+// load settings
+$settings = getJsonData(FILE_SETTINGS,[]);
 
 function validSMSBallance(): bool
 {
@@ -73,9 +81,10 @@ function validSMSBallance(): bool
 
 function getBallance(): array
 {
+  global $settings;
   $jdata = getJsonData(FILE_BALLANCE);             // get json template from file
   if ( $jdata ) {
-    $jdata[json_auth][json_key] = API_KEY;                // set out api key
+    $jdata[json_auth][json_key] = $settings[SET_API_KEY];                // set out api key
     $strData = json_encode($jdata);
     $strResponse = sendJsonString($strData);              // send json string to server
     $jdata = json_decode($strResponse, true);
@@ -93,11 +102,12 @@ function getBallance(): array
 
 function getPrice(): array
 {
+  global $settings;
   $res = [];
 
   $jdata = getJsonData(FILE_PRICE_LIST);             // get json template from file
   if ( $jdata ) {
-    $jdata[json_auth][json_key] = API_KEY;                // set out api key
+    $jdata[json_auth][json_key] = $settings[SET_API_KEY];                // set out api key
     $strData = json_encode($jdata);
     $strResponse = sendJsonString($strData);              // send json string to server
     $jdata = json_decode($strResponse, true);
@@ -125,40 +135,32 @@ function getPrice(): array
   return $res;
 }
 
-function sendMessage($u_name, $u_comment, $channels, $emulate = false): array
+function sendMessage($text, $channels, $emulate = false): array
 {
-  $res = [];
-  $s = array('  ', "\r\n", "\r", "\n");
-  $r = array(' ', " ", " ", " ");
-  $u_name = str_replace($s, $r, $u_name);
-  $u_comment = str_replace($s, $r, $u_comment);
-  $text = $u_name.': '.$u_comment;
-  $len = preg_match('/[а-яё]/iu', $text) ? SMS_MAX_LENGTH_KYR : SMS_MAX_LENGTH_LAT;
-  $text = mb_substr($text, 0, $len);  // crop to max length
-
-  $jsend = getJsonData(FILE_SEND_MESSAGE);             // get json tem$jdata = {array[3]} plate from file
+  global $settings;
+  $jsend = getJsonData(FILE_SEND_MESSAGE);     // get json tem$jdata = {array[3]} plate from file
   if ( $jsend ) {
-    $jsend[json_auth][json_key] = API_KEY;                // set out api key
+    $jsend[json_auth][json_key] = $settings[SET_API_KEY];            // set out api key
 
     $jdata = &$jsend[json_data];
-    $jdata[json_recipient] = SMS_NUMBER;                  //
-    $jdata[json_channels] = $channels;
+    $jdata[json_recipient] = $settings[SET_AUTHOR_PHONE];
+    $jdata[json_channels] = $channels;  // sms or viber
 
     if ( in_array(json_sms, $channels) ) {
       $sms = &$jdata[json_sms];
-      $sms[json_source] = DEF_SMS_SOURCE;//$u_name;
+      $sms[json_source] = $settings[SET_SMS_SOURCE];
       $sms[json_text] = $text;
-      $sms[json_ttl] = VIBER_TTL;
+      $sms[json_ttl] = $settings[SET_SMS_TTL];
     } else {
       unset($jdata[json_sms]);
     }
 
     if ( in_array(json_viber, $channels) ) {
       $viber = &$jdata[json_viber];
-      $viber[json_source] = DEF_VIBER_SOURCE;
+      $viber[json_source] = $settings[SET_VIBER_SOURCE];
       $viber[json_text] = $text;
-      $viber[json_ttl] = VIBER_TTL;
-      $viber[json_image] = VIBER_IMAGE_URL;
+      $viber[json_ttl] = $settings[SET_VIBER_TTL];
+      $viber[json_image] = "";//VIBER_IMAGE_URL;
     } else {
       unset($jdata[json_viber]);
     }
@@ -178,13 +180,26 @@ function sendMessage($u_name, $u_comment, $channels, $emulate = false): array
   return [];
 }
 
+function getMessageStatus($id): string
+{
+  global $settings;
+  $jdata = getJsonData(FILE_GET_MESSAGE_STATUS);             // get json template from file
+  if ( $jdata ) {
+    $jdata[json_auth][json_key] = $settings[SET_API_KEY];                // set out api key
+    $jdata[json_data][json_messageID] = $id;
+    $strData = json_encode($jdata);
+    return sendJsonString($strData);              // send json string to server
+  }
+  return 'false';
+}
+
 function sendJsonString($str): string
 {
+  global $settings;
   $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, API_URL);
+  curl_setopt($ch, CURLOPT_URL, $settings[SET_API_URL]);
   curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: text/xml", "Accept: text/xml"]);
   curl_setopt($ch, CURLOPT_POST, 1);
-//	curl_setopt($ch, CURLOPT_USERPWD, $user.':'.$password);
   curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
   curl_setopt($ch, CURLOPT_POSTFIELDS, $str);
@@ -193,42 +208,47 @@ function sendJsonString($str): string
   return $response;
 }
 
-function correct($str, $upper = false): string
-{
-  return trim(htmlspecialchars($upper ? mb_strtoupper($str) : $str));
-}
-
 function commentExists($fname, $u_name, $u_comment): bool
 {
   $json = file_get_contents($fname);              // get string
   $jdata = json_decode($json, true);    // get associative array
   $err = json_last_error();
 
-  if ( $err !== JSON_ERROR_NONE ) { // empty file or invalid json
-    $jdata = [ID_DATA => []]; // create empty array DATA
-  }
-
-  $u_name = mb_strtoupper($u_name);
-  $u_comment = mb_strtoupper($u_comment);
-  return false;
-  /*
-    $cnt = count($ini);
-    for ($i = $cnt; $i > 0; $i--) {
-      $item = $ini[USER_SECT.$i];
-      if ( mb_strtoupper($item['name']) == $u_name && mb_strtoupper(getContent($item, "\r\n")) == $u_comment ) {
+  if ( $err === JSON_ERROR_NONE && array_key_exists(ID_DATA, $jdata) ) {
+    $u_name = mb_strtoupper($u_name);
+    $u_comment = mb_strtoupper($u_comment);
+    foreach ($jdata[ID_DATA] as $item) {
+      if ( mb_strtoupper($item[ID_NAME]) === $u_name && mb_strtoupper($item[ID_COMMENT]) === $u_comment ) {
         return true;
       }
-    }*/
+    }
+  }
+  return false;
 }
 
-function getJsonData($fname, $default=null): array
+function deleteLastMessage($fname): bool
 {
-  if ( file_exists(FILE_BASE) and filesize(FILE_BASE) > 0) {
+  $json = file_get_contents($fname);              // get string
+  $jdata = json_decode($json, true);    // get associative array
+  $err = json_last_error();
+
+  if ( $err === JSON_ERROR_NONE && array_key_exists(ID_DATA, $jdata) ) {
+    array_pop($jdata[ID_DATA]);
+    $str = json_encode($jdata);
+    return file_put_contents($fname, $str) > 0; // write to file
+  }
+  return false;
+}
+
+function getJsonData($fname, $default = null): array
+{
+  clearstatcache();
+  if ( file_exists($fname) and filesize($fname) > 0 ) {
     $json = file_get_contents($fname);              // get string
     $jdata = json_decode($json, true);    // get associative array
     $err = json_last_error();
 
-    if ( $err === JSON_ERROR_NONE && $jdata !== null) { // empty file or invalid json
+    if ( $err === JSON_ERROR_NONE && $jdata !== null ) { // empty file or invalid json
       return $jdata;
     }
   }
@@ -256,7 +276,7 @@ function clearFile($fname): void
 
 function getTodaySMSCount($fname): int
 {
-  $jdata = getJsonData($fname,EMPTY_DATA);
+  $jdata = getJsonData($fname, EMPTY_DATA);
 
   $cnt = 0;
   foreach ($jdata[ID_DATA] as $item) {
@@ -295,9 +315,4 @@ function time_elapsed_string($datetime, $full = false): string
     $string = array_slice($string, 0, 1);
 
   return $string ? implode(', ', $string).' ago' : 'just now';
-}
-
-function getContent($str): string
-{
-   return str_replace("\r\n", "<br>", $str);
 }

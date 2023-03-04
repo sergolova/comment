@@ -1,0 +1,12 @@
+{
+    "author_phone": "380977216281",
+    "sms_source": "InfoCentr",
+    "viber_source": "Promo",
+    "api_key": "8DhdEdk8nEK7U6wWJrHlpOMKVfT1y9ds",
+    "api_url": "https://sms-fly.ua/api/v2/api.php",
+    "emulate_mode": true,
+    "sms_ttl": 5,
+    "viber_ttl": 5,
+    "disable_sms": false,
+    "sms_per_day": 3
+}
