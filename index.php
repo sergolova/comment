@@ -187,6 +187,10 @@ if ( $cnt > 0 ) {
 }
 ?>
 
+<footer>
+	<span>2023 © Sergey Golovanov</span> <br>
+	<span>Сайт работает на честном слове с помощью какой-то матери</span>
+</footer>
 
 </body>
 

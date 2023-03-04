@@ -70,6 +70,16 @@ header span {
 	color:var(--header-color-middle);
 }
 
+footer {
+	height: 50px;
+	background: var(--gray0);
+	color: var(--gray2);
+	text-align: center;
+	padding: 20px;
+	font-size: 0.8em;
+	font-family: "Consolas", "Menlo", "Monaco", serif;
+}
+
 .image {
 	background-image: url("img/main.png");
 	background-repeat:no-repeat;

@@ -4,7 +4,7 @@
     "viber_source": "Promo",
     "api_key": "8DhdEdk8nEK7U6wWJrHlpOMKVfT1y9ds",
     "api_url": "https://sms-fly.ua/api/v2/api.php",
-    "emulate_mode": true,
+    "emulate_mode": false,
     "sms_ttl": 5,
     "viber_ttl": 5,
     "disable_sms": false,
